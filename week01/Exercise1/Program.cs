@@ -1,9 +1,17 @@
 using System;
 
-class Program
+public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        Console.WriteLine("Hello World! This is the Exercise1 Project.");
+        
+        Console.Write("Please enter your first name: ");
+        string firstName = Console.ReadLine();
+
+        Console.Write("Please enter your last name: ");
+        string lastName = Console.ReadLine();
+
+    
+        Console.WriteLine($"Your name is {lastName}, {firstName}, {lastName}");
     }
 }
