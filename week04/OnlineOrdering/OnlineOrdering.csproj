@@ -1,11 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-<Project Sdk="Microsoft.NET.Sdk">
+// Responsibility: Store and format address details, determine US location.
+public class Address
+{
+    // Private attributes (Encapsulation)
+    private string _street;
+    private string _city;
+    private string _stateProvince;
+    private string _country;
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-  </PropertyGroup>
+    // Constructor
+    public Address(string street, string city, string stateProvince, string country)
+    {
+        _street = street;
+        _city = city;
+        _stateProvince = stateProvince;
+        _country = country;
+    }
 
-</Project>
+    // Method to check if the address is in the USA
+    public bool IsInUSA()
+    {
+        // Case-insensitive check for common variations of USA
+        return _country.Equals("USA", StringComparison.OrdinalIgnoreCase) ||
+               _country.Equals("United States", StringComparison.OrdinalIgnoreCase) ||
+               _country.Equals("US", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Method to return a formatted string of the full address
+    public string GetFullAddressString()
+    {
+        // Newline characters (\n) used for proper label formatting
+        return $"{_street}\n{_city}, {_stateProvince}\n{_country}";
+    }
+}
+
+// Responsibility: Store customer name and address, determine location.
+public class Customer
+{
+    private string _name;
+    private Address _address; // Composition: Customer contains an Address object
+
+    // Constructor
+    public Customer(string name, Address address)
+    {
+        _name = name;
+        _address = address;
+    }
+
+    // Getter for name (needed for Shipping Label)
+    public string GetName()
+    {
+        return _name;
+    }
+
+    // Getter for address object (needed for Shipping Label generation)
+    public Address GetAddress()
+    {
+        return _address;
+    }
+
+    // Method to return whether the customer lives in the USA
+    public bool IsUSA()
+    {
+        // Delegates the location check to the Address object
+        return _address.IsInUSA();
+    }
+}
+
+// Responsibility: Store product details and calculate the total cost for the item.
+public class Product
+{
+    private string _name;
+    private string _productID;
+    private double _pricePerUnit;
+    private int _quantity;
+
+    // Constructor
+    public Product(string name, string productID, double pricePerUnit, int quantity)
+    {
+        _name = name;
+        _productID = productID;
+        _pricePerUnit = pricePerUnit;
+        _quantity = quantity;
+    }
+
+    // Getter for name (for Packing Label)
+    public string GetName()
+    {
+        return _name;
+    }
+
+    // Getter for Product ID (for Packing Label)
+    public string GetProductID()
+    {
+        return _productID;
+    }
+
+    // Calculates total cost for this product: price * quantity
+    public double GetTotalCost()
+    {
+        return _pricePerUnit * _quantity;
+    }
+}
+
+// Responsibility: Manage products and customer, calculate total cost, and generate labels.
+public class Order
+{
+    private List<Product> _products; // Composition: Order contains a list of Products
+    private Customer _customer;      // Composition: Order contains a Customer
+
+    private const double UsaShippingCost = 5.00;
+    private const double InternationalShippingCost = 35.00;
+
+    // Constructor
+    public Order(List<Product> products, Customer customer)
+    {
+        _products = products;
+        _customer = customer;
+    }
+
+    // Calculates the total cost of the order (products + shipping)
+    public double GetTotalCost()
+    {
+        // 1. Calculate subtotal of all products
+        double productsSubtotal = 0;
+        foreach (Product product in _products)
+        {
+            productsSubtotal += product.GetTotalCost();
+        }
+
+        // 2. Determine shipping cost based on customer location
+        double shippingCost = _customer.IsUSA() ? UsaShippingCost : InternationalShippingCost;
+
+        // 3. Return final total
+        return productsSubtotal + shippingCost;
+    }
+
+    // Generates the packing label (product name and ID)
+    public string GetPackingLabel()
+    {
+        StringBuilder label = new StringBuilder("--- PACKING LABEL ---\n");
+        foreach (Product product in _products)
+        {
+            label.AppendLine($"Product: {product.GetName()} (ID: {product.GetProductID()})");
+        }
+        return label.ToString();
+    }
+
+    // Generates the shipping label (customer name and full address)
+    public string GetShippingLabel()
+    {
+        StringBuilder label = new StringBuilder("--- SHIPPING LABEL ---\n");
+        label.AppendLine(_customer.GetName());
+        // Uses the Address method via the Customer object
+        label.Append(_customer.GetAddress().GetFullAddressString());
+        return label.ToString();
+    }
+}
