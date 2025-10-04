@@ -1,11 +1,43 @@
+using System;
+using System.Collections.Generic;
 
-<Project Sdk="Microsoft.NET.Sdk">
+// Responsibility: Track the name of the commenter and the text of the comment.
+public class Comment
+{
+    // Attributes using auto-implemented properties for simplicity
+    public string CommenterName { get; set; }
+    public string CommentText { get; set; }
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-  </PropertyGroup>
+    // Constructor to easily set values upon creation
+    public Comment(string name, string text)
+    {
+        CommenterName = name;
+        CommentText = text;
+    }
+}
 
-</Project>
+// Responsibility: Track title, author, length, and store a list of comments.
+public class Video
+{
+    // Attributes
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public int LengthInSeconds { get; set; } // Length in seconds
+
+    // Member variable to store the list of comments (Composition)
+    public List<Comment> Comments { get; set; } = new List<Comment>();
+
+    // Constructor
+    public Video(string title, string author, int length)
+    {
+        Title = title;
+        Author = author;
+        LengthInSeconds = length;
+    }
+
+    // Method to return the number of comments
+    public int GetNumberOfComments()
+    {
+        return Comments.Count;
+    }
+}
