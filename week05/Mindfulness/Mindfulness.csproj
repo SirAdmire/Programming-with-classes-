@@ -1,11 +1,291 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
-<Project Sdk="Microsoft.NET.Sdk">
+// Base Class to handle common functionality for all activities
+public abstract class Activity
+{
+    private string _activityName;
+    private string _description;
+    protected int _duration; // Protected so derived classes can use it
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-  </PropertyGroup>
+    // Constructor to initialize the name and description
+    public Activity(string name, string description)
+    {
+        _activityName = name;
+        _description = description;
+    }
 
-</Project>
+    // Public method to be called by Program.cs to start the specific activity
+    public void Start()
+    {
+        ShowStartingMessage();
+        RunActivity(); // This calls the specific activity's implementation
+        ShowEndingMessage();
+    }
+
+    // Abstract method to be implemented by each derived activity
+    protected abstract void RunActivity();
+
+    // Common starting message logic
+    protected void ShowStartingMessage()
+    {
+        Console.Clear();
+        Console.WriteLine($"Welcome to the {_activityName}.");
+        Console.WriteLine();
+        Console.WriteLine(_description);
+        Console.WriteLine();
+
+        Console.Write("How long, in seconds, would you like for your session? ");
+        string input = Console.ReadLine();
+        if (int.TryParse(input, out int duration))
+        {
+            _duration = duration;
+        }
+        else
+        {
+            _duration = 30; // Default to 30 seconds on invalid input
+            Console.WriteLine("Invalid input. Defaulting duration to 30 seconds.");
+        }
+
+        Console.Clear();
+        Console.WriteLine("Get ready to begin...");
+        ShowSpinner(5); // Pause for several seconds with an animation
+    }
+
+    // Common ending message logic
+    protected void ShowEndingMessage()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Well done!");
+        ShowSpinner(4); // Pause for a moment with a spinner
+        Console.WriteLine($"You have completed the {_activityName} for {_duration} seconds.");
+        ShowSpinner(5); // Final pause
+    }
+
+    // Helper method for the spinner animation
+    protected void ShowSpinner(int seconds)
+    {
+        List<string> animation = new List<string> { "|", "/", "-", "\\" };
+        DateTime startTime = DateTime.Now;
+        DateTime endTime = startTime.AddSeconds(seconds);
+        int i = 0;
+
+        while (DateTime.Now < endTime)
+        {
+            string s = animation[i];
+            Console.Write(s);
+            Thread.Sleep(250); // Pause for 250 milliseconds
+            Console.Write("\b \b"); // Erase the character
+
+            i++;
+            if (i >= animation.Count)
+            {
+                i = 0;
+            }
+        }
+    }
+
+    // Helper method for the countdown timer animation
+    protected void ShowCountdown(int seconds)
+    {
+        for (int i = seconds; i > 0; i--)
+        {
+            // Use \b to move the cursor back and overwrite the previous number
+            Console.Write(i);
+            Thread.Sleep(1000); // Pause for 1 second
+            Console.Write("\b"); 
+            
+            // To prevent screen clutter, explicitly write a space to clear the digit.
+            // This is safer than relying on a single backspace for multi-digit numbers.
+            if (i >= 10)
+            {
+                Console.Write("\b"); // Two backspaces for two-digit number
+            }
+            Console.Write(" "); // Overwrite with a space
+            if (i >= 10)
+            {
+                Console.Write("\b"); // Move back again for the next write
+            }
+            Console.Write("\b"); // Move back for the next write
+        }
+    }
+}
+
+// -------------------------------------------------
+// Derived Class 1: Breathing Activity
+// -------------------------------------------------
+public class BreathingActivity : Activity
+{
+    public BreathingActivity()
+        : base("Breathing Activity", "This activity will help you relax by walking your through breathing in and out slowly. Clear your mind and focus on your breathing.")
+    {
+        // No unique properties needed
+    }
+
+    protected override void RunActivity()
+    {
+        DateTime startTime = DateTime.Now;
+        DateTime endTime = startTime.AddSeconds(_duration);
+
+        while (DateTime.Now < endTime)
+        {
+            // Breathe in cycle
+            if (DateTime.Now < endTime)
+            {
+                Console.Write("Breathe in...");
+                ShowCountdown(4); // 4 seconds in
+                Console.Write("   \r"); // Clear line and carriage return
+            }
+
+            // Breathe out cycle
+            if (DateTime.Now < endTime)
+            {
+                Console.Write("Breathe out...");
+                ShowCountdown(6); // 6 seconds out
+                Console.Write("    \r"); // Clear line and carriage return
+            }
+            
+            // NOTE: The total cycle is 10 seconds. The loop continues until endTime is reached.
+            // The logic ensures the countdowns don't run past the session duration.
+        }
+    }
+}
+
+// -------------------------------------------------
+// Derived Class 2: Reflection Activity
+// -------------------------------------------------
+public class ReflectionActivity : Activity
+{
+    private List<string> _prompts;
+    private List<string> _questions;
+    private Random _random;
+
+    public ReflectionActivity()
+        : base("Reflection Activity", "This activity will help you reflect on times in your life when you have shown strength and resilience. This will help you recognize the power you have and how you can use it in other aspects of your life.")
+    {
+        _random = new Random();
+        _prompts = new List<string>
+        {
+            "Think of a time when you stood up for someone else.",
+            "Think of a time when you did something really difficult.",
+            "Think of a time when you helped someone in need.",
+            "Think of a time when you did something truly selfless."
+        };
+
+        _questions = new List<string>
+        {
+            "Why was this experience meaningful to you?",
+            "Have you ever done anything like this before?",
+            "How did you get started?",
+            "How did you feel when it was complete?",
+            "What made this time different than other times when you were not as successful?",
+            "What is your favorite thing about this experience?",
+            "What could you learn from this experience that applies to other situations?",
+            "What did you learn about yourself through this experience?",
+            "How can you keep this experience in mind in the future?"
+        };
+    }
+
+    private string GetRandomPrompt()
+    {
+        int index = _random.Next(_prompts.Count);
+        return _prompts[index];
+    }
+
+    private string GetRandomQuestion()
+    {
+        int index = _random.Next(_questions.Count);
+        return _questions[index];
+    }
+
+    protected override void RunActivity()
+    {
+        Console.WriteLine("Consider the following prompt:");
+        Console.WriteLine();
+        Console.WriteLine($" --- {GetRandomPrompt()} --- ");
+        Console.WriteLine();
+        Console.Write("When you have thought about this, press Enter to continue...");
+        Console.ReadLine();
+
+        Console.WriteLine("Now ponder on each of the following questions as they relate to this experience.");
+        Console.Write("You may begin in a moment...");
+        ShowSpinner(5); // Pause before starting the reflection questions
+
+        Console.Clear(); // Clear the screen for the reflection phase
+        DateTime startTime = DateTime.Now;
+        DateTime endTime = startTime.AddSeconds(_duration);
+
+        while (DateTime.Now < endTime)
+        {
+            Console.Write($"> {GetRandomQuestion()} ");
+            ShowSpinner(7); // 7 seconds of reflection time per question
+            Console.WriteLine();
+        }
+    }
+}
+
+// -------------------------------------------------
+// Derived Class 3: Listing Activity
+// -------------------------------------------------
+public class ListingActivity : Activity
+{
+    private List<string> _prompts;
+    private Random _random;
+
+    public ListingActivity()
+        : base("Listing Activity", "This activity will help you reflect on the good things in your life by having you list as many things as you can in a certain area.")
+    {
+        _random = new Random();
+        _prompts = new List<string>
+        {
+            "Who are people that you appreciate?",
+            "What are personal strengths of yours?",
+            "Who are people that you have helped this week?",
+            "When have you felt the Holy Ghost this month?",
+            "Who are some of your personal heroes?"
+        };
+    }
+
+    private string GetRandomPrompt()
+    {
+        int index = _random.Next(_prompts.Count);
+        return _prompts[index];
+    }
+
+    protected override void RunActivity()
+    {
+        Console.WriteLine("Ponder the following prompt:");
+        Console.WriteLine();
+        Console.WriteLine($" --- {GetRandomPrompt()} --- ");
+        Console.WriteLine();
+        Console.WriteLine("You will have a few seconds to think before you begin listing.");
+        ShowCountdown(5); // Countdown to let the user prepare
+
+        Console.WriteLine("Start listing items now:");
+        
+        DateTime startTime = DateTime.Now;
+        DateTime endTime = startTime.AddSeconds(_duration);
+        int itemCount = 0;
+
+        // Loop until the duration is reached
+        while (DateTime.Now < endTime)
+        {
+            // Set a timeout of 1 second for ReadLine
+            // NOTE: A more robust solution would use non-blocking input, but this is a common simplification for console apps.
+            if (Console.In.Peek() != -1) // Check if input is available
+            {
+                string item = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(item))
+                {
+                    itemCount++;
+                }
+            }
+            // Add a small delay to prevent the loop from consuming too much CPU
+            Thread.Sleep(50); 
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"You listed {itemCount} items!");
+    }
+}
