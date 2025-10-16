@@ -1,11 +1,172 @@
+using System;
+using System.Collections.Generic;
 
-<Project Sdk="Microsoft.NET.Sdk">
+// --- Base Class ---
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-  </PropertyGroup>
+/// <summary>
+/// Base class for all fitness activities, containing shared attributes and polymorphic methods.
+/// All calculations use the metric system (kilometers).
+/// </summary>
+public abstract class Activity
+{
+    private string _date;
+    private int _minutes;
 
-</Project>
+    public Activity(string date, int minutes)
+    {
+        _date = date;
+        _minutes = minutes;
+    }
+
+    // Public access to shared variables for use in calculations
+    protected int Minutes => _minutes;
+    protected string Date => _date;
+
+    // --- Polymorphic Abstract Methods ---
+
+    /// <summary>
+    /// Must be overridden by derived classes to return the distance in kilometers (km).
+    /// </summary>
+    public abstract double GetDistance();
+
+    /// <summary>
+    /// Must be overridden by derived classes to return the speed in kilometers per hour (kph).
+    /// </summary>
+    public abstract double GetSpeed();
+
+    /// <summary>
+    /// Must be overridden by derived classes to return the pace in minutes per kilometer (min/km).
+    /// </summary>
+    public abstract double GetPace();
+
+    // --- Final Summary Method ---
+
+    /// <summary>
+    /// Generates a summary string for the activity using the polymorphic methods.
+    /// </summary>
+    public virtual string GetSummary()
+    {
+        // Example: 03 Nov 2022 Running (30 min): Distance 4.8 km, Speed: 9.7 kph, Pace: 6.25 min per km
+        
+        // Use string formatting to ensure values have one decimal place for cleanliness
+        string distance = GetDistance().ToString("0.0");
+        string speed = GetSpeed().ToString("0.0");
+        string pace = GetPace().ToString("0.0");
+        string activityType = GetType().Name;
+
+        return $"{_date} {activityType} ({_minutes} min): " +
+               $"Distance {distance} km, Speed: {speed} kph, Pace: {pace} min per km";
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------
+
+// --- Derived Classes ---
+
+/// <summary>
+/// Represents a running activity, storing the distance directly.
+/// </summary>
+public class Running : Activity
+{
+    private double _distanceKm; // Stored in kilometers
+
+    public Running(string date, int minutes, double distanceKm)
+        : base(date, minutes)
+    {
+        _distanceKm = distanceKm;
+    }
+
+    // Distance is stored directly
+    public override double GetDistance()
+    {
+        return _distanceKm;
+    }
+
+    // Speed (kph) = (distance / minutes) * 60
+    public override double GetSpeed()
+    {
+        // Avoid division by zero
+        if (Minutes == 0) return 0;
+        return (_distanceKm / Minutes) * 60;
+    }
+
+    // Pace (min/km) = minutes / distance
+    public override double GetPace()
+    {
+        // Avoid division by zero
+        if (_distanceKm == 0) return 0;
+        return Minutes / _distanceKm;
+    }
+}
+
+/// <summary>
+/// Represents a stationary cycling activity, storing the speed directly.
+/// </summary>
+public class Cycling : Activity
+{
+    private double _speedKph; // Stored in kilometers per hour
+
+    public Cycling(string date, int minutes, double speedKph)
+        : base(date, minutes)
+    {
+        _speedKph = speedKph;
+    }
+
+    // Distance (km) = (speed / 60) * minutes
+    public override double GetDistance()
+    {
+        return (_speedKph / 60) * Minutes;
+    }
+
+    // Speed is stored directly
+    public override double GetSpeed()
+    {
+        return _speedKph;
+    }
+
+    // Pace (min/km) = 60 / speed
+    public override double GetPace()
+    {
+        // Avoid division by zero
+        if (_speedKph == 0) return 0;
+        return 60 / _speedKph;
+    }
+}
+
+/// <summary>
+/// Represents a swimming activity, storing the number of laps directly.
+/// </summary>
+public class Swimming : Activity
+{
+    private int _laps;
+    private const double LAP_LENGTH_METERS = 50;
+
+    public Swimming(string date, int minutes, int laps)
+        : base(date, minutes)
+    {
+        _laps = laps;
+    }
+
+    // Distance (km) = (laps * 50) / 1000
+    public override double GetDistance()
+    {
+        return (_laps * LAP_LENGTH_METERS) / 1000;
+    }
+
+    // Speed (kph) = (distance / minutes) * 60
+    public override double GetSpeed()
+    {
+        // Avoid division by zero
+        if (Minutes == 0) return 0;
+        return (GetDistance() / Minutes) * 60;
+    }
+
+    // Pace (min/km) = minutes / distance
+    public override double GetPace()
+    {
+        double distance = GetDistance();
+        // Avoid division by zero
+        if (distance == 0) return 0;
+        return Minutes / distance;
+    }
+}
