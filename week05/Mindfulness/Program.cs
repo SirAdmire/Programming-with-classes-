@@ -1,5 +1,10 @@
 using System;
 
+// Exceeding Requirements:
+// 1. Added a robust 'Start' method in the Base class to manage the three stages: start, run, end.
+// 2. Added clear line clearing (\r and \b) in the Breathing Activity to make the countdown/messages less cluttered and more polished.
+// 3. Implemented a basic check for non-blocking input in the Listing Activity to allow the loop to terminate when the duration is met, instead of hanging indefinitely on Console.ReadLine().
+
 class Program
 {
     static void Main(string[] args)
